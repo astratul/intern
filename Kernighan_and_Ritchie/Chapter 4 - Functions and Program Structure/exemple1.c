@@ -5,22 +5,19 @@ occurrence of t in s , or -1 if there is none.
 #include <stdio.h>
 #define MAXLINE 1000 /* maximum input line length */
 int getline2(char line[], int max);
-int strindex2(char source[], char searchfor[]);
-char pattern[] = "buna"; /* pattern to search for */
+int strindex(char source[], char searchfor[]);
+char pattern[] = "ould"; /* pattern to search for */
 /* find all lines matching pattern */
 int main()
 {
-    char line[MAXLINE] = "heibunamanumescAdrianabuna";
-    int found;
-    // while (getline2(line, MAXLINE) > 0)
-    //     if ((f = strindex2(line, pattern)) > found) {
-    //         // printf("This line contains the pattern %s : %s",pattern,line);
-    //         found = f;
-    //     }
-    //     printf("The rightmost occurrence of %s is: %d\n",pattern,found);
-    found = strindex2(line, pattern);
-    printf("The rightmost occurrence of %s is: %d\n",pattern,found);
-    return 0;
+    char line[MAXLINE];
+    int found = 0;
+    while (getline2(line, MAXLINE) > 0)
+        if (strindex(line, pattern) >= 0) {
+            printf("This line contains the pattern %s : %s",pattern,line);
+            found++;
+        }
+        return found;
 }
 
 /* getline: get line into s, return length */
@@ -37,15 +34,14 @@ int getline2(char s[], int lim)
 }
 
 /* strindex: return index of t in s, -1 if none */
-int strindex2(char s[], char t[])
+int strindex(char s[], char t[])
 {
     int i, j, k;
-    int result = -1;
     for (i = 0; s[i] != '\0'; i++) {
         for (j=i, k=0; t[k]!='\0' && s[j]==t[k]; j++, k++)
             ;
         if (k > 0 && t[k] == '\0')
-            result = i;
+            return i;
     }
-    return result;
+    return -1;
 }
