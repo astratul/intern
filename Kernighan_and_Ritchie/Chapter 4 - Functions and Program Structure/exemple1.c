@@ -1,6 +1,16 @@
 /*
-Exercise 4-1. Write the function strindex(s,t) which returns the position of the rightmost
-occurrence of t in s , or -1 if there is none.
+
+Ah Love! could you and I with Fate conspire
+To grasp this sorry Scheme of Things entire,
+Would not we shatter it to bits -- and then
+Re-mould it nearer to the Heart's Desire!
+
+will produce the output:
+
+Ah Love! could you and I with Fate conspire
+Would not we shatter it to bits -- and then
+Re-mould it nearer to the Heart's Desire!
+
 */
 #include <stdio.h>
 #define MAXLINE 1000 /* maximum input line length */
