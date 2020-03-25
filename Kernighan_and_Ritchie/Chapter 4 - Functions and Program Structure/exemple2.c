@@ -5,6 +5,7 @@
 
 double atof(char s[]);
 int getline2(char s[], int lim);
+
 int main() {
     double sum, atof(char []);
     char line[MAXLINE];
@@ -12,7 +13,7 @@ int main() {
 
     sum = 0;
     while (getline2(line, MAXLINE) > 0)
-    printf("atof: %g\tSuma numerelor:%g\n",atof(line), sum += atof(line));
+    printf("%g\t%g\n",atof(line), sum += atof(line));
     return 0;
 }
 
