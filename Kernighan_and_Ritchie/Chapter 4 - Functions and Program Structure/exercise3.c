@@ -1,21 +1,23 @@
 /*
-postfix calculator e.g: 
-(1 - 2) * (4 + 5)
-is entered as
-1 2 - 4 5 + *
+Exercise 4-3. Given the basic framework, it's straightforward to extend the calculator. Add the modulus (%) operator and provisions for negative numbers.
+e.g: -34 9 %
+        -7
 */
 
 #include <stdio.h>
-#include <stdlib.h> /* for atof() */
-#define MAXOP 100   /* max size of operand or operator */
-#define NUMBER '0'  /* signal that a number was found */
+#include <stdlib.h>
+#include <math.h>
+
+#define MAXOP 100
+#define NUMBER '0'
 
 int getop(char[]);
 void push(double);
 double pop(void);
 
-/* reverse Polish calculator */
-int main()
+/* reverse polish calculator */
+
+int main(void)
 {
     int type;
     double op2;
@@ -43,7 +45,15 @@ int main()
             if (op2 != 0.0)
                 push(pop() / op2);
             else
-                printf("error: zero divisor\n");
+                printf("error:zero divisor\n");
+            break;
+        case '%':
+            op2 = pop();
+            if (op2 != 0.0)
+                // push(fmod(pop(), op2));
+                push(((int)pop() % (int)op2));
+            else
+                printf("erro:zero divisor\n");
             break;
         case '\n':
             printf("\t%.8g\n", pop());
