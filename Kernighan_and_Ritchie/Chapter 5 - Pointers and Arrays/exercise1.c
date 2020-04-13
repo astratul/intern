@@ -22,7 +22,6 @@ void ungetch(int c)
         buf[bufp++] = c;
 }
 
-
 int main(void)
 {
     int n, s, v[1000], getint(int *);
@@ -46,7 +45,8 @@ int getint(int *pn)
     while (isspace(c = getch()))
         /* skip white space */
         ;
-    if (!isdigit(c) && c != EOF && c != '+' && c != '-'){
+    if (!isdigit(c) && c != EOF && c != '+' && c != '-')
+    {
         ungetch(c); /* it's not a number */
         return 0;
     }

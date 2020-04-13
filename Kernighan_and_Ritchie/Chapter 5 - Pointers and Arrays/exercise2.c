@@ -23,13 +23,13 @@ int getfloat(float *); //return int
 
 int main(void)
 {
-    int n,j;
+    int n, j;
     float v[1000];
 
     for (n = 0; n < 1000 && getfloat(&v[n]) != EOF; n++)
         ;
     printf("\nThe values: ");
-    for (j=0; j < n; j++)
+    for (j = 0; j < n; j++)
         printf("%f ", v[j]);
     printf("\n");
     return 0;
