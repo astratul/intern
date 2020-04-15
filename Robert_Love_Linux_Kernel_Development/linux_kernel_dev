@@ -1,3 +1,1 @@
-Introduction to the Linux Kernel
 
-This chapter introduces the Linux kernel and Linux operating system, placing them in context of Unix.Today, Unix is a family of operating systems implementing a similar application programming interface (API) and built around shared design decisions. But Unix is also a specific operating system, first built more than 40 years ago.To understand Linux, we must first discuss the first Unix system.
