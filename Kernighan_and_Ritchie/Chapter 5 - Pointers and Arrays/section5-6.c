@@ -1,4 +1,4 @@
-/* EXEMPLE FROM 5.6 Pointer Arrays; Pointers to Pointers */
+// 5.6 Pointer Arrays; Pointers to Pointers
 
 #include <stdio.h>
 #include <string.h>

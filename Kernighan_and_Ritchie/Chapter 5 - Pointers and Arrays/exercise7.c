@@ -16,6 +16,7 @@ static char *allocp = allocbuf;
 
 char *lineptr[MAXLINES];
 char linestor[MAXLINES];
+
 int getline2(char *,int);
 char *alloc(int);
 int readlines(char *lineptr[],char *linestor,int nlines);
