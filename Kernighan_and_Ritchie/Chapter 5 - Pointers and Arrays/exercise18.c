@@ -1,4 +1,6 @@
-// 5.12 Complicated Declarations
+/* 
+Exercise 5-18. Make dcl recover from input errors. 
+*/
 
 #include <stdio.h>
 #include <string.h>
@@ -17,8 +19,17 @@ enum
 void dcl(void);
 void dirdcl(void);
 
+enum
+{
+    NO,
+    YES
+};
+void dcl(void);
+void dirdcl(void);
+void errmsgdcl(char *);
 int gettoken(void);
 int tokentype;
+extern int prevtoken;
 char token[MAXTOKEN];
 char name[MAXTOKEN];
 char datatype[MAXTOKEN];
@@ -26,7 +37,7 @@ char out[1000];
 
 char buf[BUFSIZE]; /* buffer for ungetch   */
 int bufp = 0;      /* next free position in buf   */
-
+int prevtoken = NO;
 int main()
 {
     int type;
@@ -127,12 +138,12 @@ void dirdcl(void)
         /* ( dcl ) */
         dcl();
         if (tokentype != ')')
-            printf("error: missing )\n");
+            errmsgdcl("error: missing )\n");
     }
     else if (tokentype == NAME) /* variable name */
         strcpy(name, token);
     else
-        printf("error: expected name or (dcl)\n");
+        errmsgdcl("error: expected name or (dcl)\n");
     while ((type = gettoken()) == PARENS || type == BRACKETS)
         if (type == PARENS)
             strcat(out, " function returning");
@@ -142,6 +153,12 @@ void dirdcl(void)
             strcat(out, token);
             strcat(out, " of");
         }
+}
+
+void errmsgdcl(char *msg)
+{
+    printf("%s", msg);
+    prevtoken = YES;
 }
 
 int getch(void) /* get a (possibly pushed back) character */
