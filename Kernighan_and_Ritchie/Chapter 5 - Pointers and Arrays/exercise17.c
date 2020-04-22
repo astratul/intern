@@ -6,7 +6,6 @@ independent set of options. (The index for this book was sorted with -df for the
 #include <stdio.h>
 #include <ctype.h>
 #include <math.h>
-#include <ctype.h>
 #include <string.h>
 #include <stdlib.h>
 
