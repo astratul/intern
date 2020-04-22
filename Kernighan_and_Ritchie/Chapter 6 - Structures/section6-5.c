@@ -68,6 +68,7 @@ struct tnode *addtree1(struct tnode *p, char *w)
     return p;
 }
 
+
 /* treeprint: in-order print of tree p */
 void treeprint(struct tnode *p)
 {
