@@ -12,12 +12,15 @@ int main(int argc, char *argv[]){
     if(argc == 1)
         while ((c = getchar()) != EOF)
             putchar(tolower(c));
-    else if(argc == 2)
+    else if(argc == 2){
         if(strcmp(argv[1],"LOW")==0)
             while ((c = getchar()) != EOF)
                 putchar(tolower(c));
         else if(strcmp(argv[1],"UP")==0)
             while ((c = getchar()) != EOF)
-                putchar(toupper(c)); 
+                putchar(toupper(c));
+        }
+    else if(argc >2)
+        printf("Wrong number of arguments.\n");    
     return 0;
 }
