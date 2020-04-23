@@ -7,7 +7,7 @@ Exercise 7-1. Write a program that converts upper case to lower or lower case to
 #include <stdio.h>
 #include <ctype.h>
 
-int main(int argc,char *argv[]){
+int main(int argc, char *argv[]){
     int c;
     if(argc == 1)
         while ((c = getchar()) != EOF)
@@ -18,8 +18,6 @@ int main(int argc,char *argv[]){
                 putchar(tolower(c));
         else if(strcmp(argv[1],"UP")==0)
             while ((c = getchar()) != EOF)
-                putchar(toupper(c));
-    else
-        printf("Wrong number of arguments.\n");    
+                putchar(toupper(c)); 
     return 0;
 }
