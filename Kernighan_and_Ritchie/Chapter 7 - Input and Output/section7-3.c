@@ -6,7 +6,7 @@
 
 void minprintf(char *fmt,...);
 
-int main(void){
+int main(){
     minprintf("%s\n","Bonsoir!");   
     return 0;
 }

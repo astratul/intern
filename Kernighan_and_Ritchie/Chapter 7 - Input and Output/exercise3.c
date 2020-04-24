@@ -8,7 +8,7 @@ Exercise 7-3. Revise minprintf to handle more of the other facilities of printf 
 
 void minprintf(char *fmt,...);
 
-int main(void){
+int main(){
     minprintf("%d\n",123);   
     minprintf("%c\n",'b');   
     minprintf("%u\n",10987);   
