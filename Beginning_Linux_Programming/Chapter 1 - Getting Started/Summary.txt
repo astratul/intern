@@ -1,6 +1,6 @@
-Summary
+						Summary
 
-			KISS - “Keep It Small and Simple”
+				KISS - “Keep It Small and Simple”
 
 Note that Linux, like UNIX, uses the colon ( : ) character to separate entries in the PATH variable, rather
 than the semicolon ( ; ) that MS-DOS and Windows use. (UNIX chose : first, so ask Microsoft why
@@ -90,7 +90,5 @@ is loaded into memory to be executed, the function references are resolved and c
 shared library, which will be loaded into memory if needed.
 
 	$ ldd program
-
 	$ man gcc
-
 	$ info gcc
