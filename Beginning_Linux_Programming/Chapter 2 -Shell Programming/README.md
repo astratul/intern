@@ -183,45 +183,45 @@ then
 fi
 ```
 #### String Comparison
-string1 = string2 - True if the strings are equal
-string1 != string2 - True if the strings are not equal
--n string - True if the string is not null
--z string - True if the string is null (an empty string)
+1. string1 = string2 - True if the strings are equal
+2. string1 != string2 - True if the strings are not equal
+3. -n string - True if the string is not null
+4. -z string - True if the string is null (an empty string)
 #### Arithmetic Comparison
-expression1 -eq expression2 - True if the expressions are equal
-expression1 -ne expression2 - True if the expressions are not equal
-expression1 -gt expression2 - True if expression1 is greater than expression2
-expression1 -ge expression2 - True if expression1 is greater than or equal to expression2
-expression1 -lt expression2 - True if expression1 is less than expression2
-expression1 -le expression2 - True if expression1 is less than or equal to expression2
-! expression - True if the expression is false, and vice versa
+1. expression1 -eq expression2 - True if the expressions are equal
+2. expression1 -ne expression2 - True if the expressions are not equal
+3. expression1 -gt expression2 - True if expression1 is greater than expression2
+4. expression1 -ge expression2 - True if expression1 is greater than or equal to expression2
+5. expression1 -lt expression2 - True if expression1 is less than expression2
+6. expression1 -le expression2 - True if expression1 is less than or equal to expression2
+7. ! expression - True if the expression is false, and vice versa
 #### File Conditional
--d file - True if the file is a directory
--e file - True if the file exists. Note that historically the - e option has not been portable, so -f is usually used.
--f file - True if the file is a regular file
--g file - True if set-group-id is set on file
--r file - True if the file is readable
--s file - True if the file has nonzero size
--u file - True if set-user-id is set on file
--w file - True if the file is writable
--x file - True if the file is executable
+1. -d file - True if the file is a directory
+2. -e file - True if the file exists. Note that historically the - e option has not been portable, so -f is usually used.
+3. -f file - True if the file is a regular file
+4. -g file - True if set-group-id is set on file
+5. -r file - True if the file is readable
+6. -s file - True if the file has nonzero size
+7. -u file - True if set-user-id is set on file
+8. -w file - True if the file is writable
+9. -x file - True if the file is executable
 
 ### Control Structures
-testif.sh
-testelif.sh
-controlStructures.sh
-testfor.sh
-testforWildcard.sh 
-testUntil.sh 
-testCase.sh
-patterns.sh
+- testif.sh
+- testelif.sh
+- controlStructures.sh
+- testfor.sh
+- testforWildcard.sh 
+- testUntil.sh 
+- testCase.sh
+- patterns.sh
 ### Lists
-andlists.sh
-orlists.sh
+- andlists.sh
+- orlists.sh
 
 ### Functions
-func1.sh
-func2.sh
-func3.sh 
+- func1.sh
+- func2.sh
+- func3.sh 
 
 ## Commands
