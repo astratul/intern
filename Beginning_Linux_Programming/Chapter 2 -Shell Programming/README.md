@@ -225,3 +225,11 @@ fi
 - func3.sh 
 
 ## Commands
+- break: testbreak.sh
+- ":" alias for true: testcom.sh 
+- continue: testContinue.sh
+- "." executes the command in the current shell:  classic_set and latest_set
+- echo = printf;
+- eval - enables you to evaluate arguments;
+- exec - to replace the current shell with a different program;
+- exit n - causes the script to exit with exit code n: testExit.sh;
