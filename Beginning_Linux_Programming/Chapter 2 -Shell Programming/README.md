@@ -233,3 +233,65 @@ fi
 - eval - enables you to evaluate arguments;
 - exec - to replace the current shell with a different program;
 - exit n - causes the script to exit with exit code n: testExit.sh;
+- export - The export command makes the variable named as its parameter available in subshells. By default, variables created in a shell are not available in further (sub)shells invoked from that shell. The export command creates an environment variable from its parameter that can be seen by other scripts and programs invoked from the current program. More technically, the exported variables form the environment variables in any child processes derived from the shell. :export1.sh export2.sh;
+
+The commands set -a or set -allexport will export all variables thereafter.
+
+- expr - evaluates its arguments as an expression.
+- printf - printf “format string“ parameter1 parameter2 ...
+- return 
+- set - sets the parameter variables for the shell. It can be a useful way of using fields in commands that output space-separated values. testSet.sh
+- shift - moves all the parameter variables down by one, so that $2 becomes $1 , $3 becomes $2 , and so on. The previous value of $1 is discarded, while $0 remains unchanged. If a numerical parameter is specified in the call to shift , the parameters move that many spaces. The other variables, $* , $@ , and $# , are also modified in line with the new arrangement of parameter variables. shift.sh
+- trap - to specify the actions to take on receipt of signals.
+    Signals are events sent asynchronously to a program. By default, they normally cause the program to terminate.
+
+HUP (1) Hang up; usually sent when a terminal goes offline, or a user logs out
+INT (2) Interrupt; usually sent by pressing Ctrl+C
+QUIT (3) Quit; usually sent by pressing Ctrl+\
+ABRT (6) Abort; usually sent on some serious execution error
+ALRM (14) Alarm; usually used for handling timeouts
+TERM (15) Terminate; usually sent by the system when it’s shutting down
+
+trap.sh
+
+- unset - removes variables or functions from the environment. It can’t do this to read-only variables defined by the shell itself, such as IFS. It’s not often used. unset.sh
+
+
+### Two More Useful Commands and Regular Expressions
+
+#### find = to search for files
+find [path] [options] [tests] [actions]
+
+  Option   Meaning
+- -depth - Search the contents of a directory before looking at the directory itself.
+- -follow - Follow symbolic links.
+- -maxdepths N - Search at most N levels of the directory when searching.
+- -mount (or -xdev ) - Don’t search directories on other file systems.
+
+
+  Action   Meaning
+- -exec command - Execute a command. This is one of the most common actions. See the explanation following this table for how parameters may be passed to the command. This action must be terminated with a \; character pair.
+- -ok command - Like -exec , except that it prompts for user confirmation of each file on which it will carry out the command before executing the command. This action must be terminated with a \; character pair.
+- -print - Print out the name of the file.
+- -ls - Use the command ls -dils on the current file.
+
+
+#### grep = to search files for strings
+
+grep [options] PATTERN [FILES]
+
+   Option   Meaning
+- -c - Rather than print matching lines, print a count of the number of lines that match.
+- -E - Turn on extended expressions.
+- -h - Suppress the normal prefixing of each output line with the name of the file it was found in.
+- -i - Ignore case.
+- -l - List the names of the files with matching lines; don’t output the actual matched line.
+- -v - Invert the matching pattern to select nonmatching lines, rather than matching lines.
+
+
+#### Regular Expressions
+
+
+
+
+
