@@ -291,7 +291,31 @@ grep [options] PATTERN [FILES]
 
 #### Regular Expressions
 
+Match Pattern Meaning
+[:alnum:] Alphanumeric characters
+[:alpha:] Letters
+[:ascii:] ASCII characters
+[:blank:] Space or tab
+[:cntrl:] ASCII control characters
+[:digit:] Digits
+[:graph:] Noncontrol, nonspace characters
+[:lower:] Lowercase letters
+[:print:] Printable characters
+[:punct:] Punctuation characters
+[:space:] Whitespace characters, including vertical tab
+[:upper:] Uppercase letters
+[:xdigit:] Hexadecimal digits
 
+### Command Execution
 
+#### Arithmetic Expansion
+$((...))
+aritm.sh
+#### Parameter Expansion
+param.sh
+#### Here Documents
+here.sh
+#### Debugging Scripts
 
+## Going Graphical — The dialog Utility
 
