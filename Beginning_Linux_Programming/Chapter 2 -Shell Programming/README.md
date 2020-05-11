@@ -317,5 +317,42 @@ param.sh
 here.sh
 #### Debugging Scripts
 
+- sh -n = Checks for syntax error only;
+- sh -v = Echoes commands before running them
+- sh -x = Echoes commands after processing on the command line
+- sh -u = Gives an error message when an undefined variable is used
+- set -o xtrace = turn xtrace on
+
 ## Going Graphical — The dialog Utility
 
+```
+(g)dialog --msgbox “Hello World” 9 18
+```
+
+- Check boxes --checklist = Allows you to display a list of items,each of which may be individually selected (text height width list-height [tag text status] ...)
+- Info boxes --infobox = A simple display in a box that returns immediately, without clearing the screen (text height width)
+- Input boxes --inputbox = Allows the user to type in text (text height width [initial string])
+- Menu boxes --menu = Allow the user to pick a single item from a list (text height width menu-height [tag item ] ...)
+- Message boxes --msgbox = Displays a message to users, with an OK button when they wish to continue (text height width)
+- Radio selection boxes --radiolist = Allows the user to select an option from a list (text height width list-height [tag text status] ...)
+- Text boxes --textbox = Allows you to display a file in a scrolling box (filename height width)
+- Yes/No boxes --yesno = Allows you to ask a question, to which the user can select either yes or no (text height width)
+- --title = Allows you to specify a title for the box
+- --clear = is used on its own for clearing the screen
+
+```
+(g)dialog --title "Check me" --checklist "Pick Numbers" 15 25 3 1 "one" "off" 2 "two"  "on" 3 "three" "off"
+```
+
+Try It Out:
+1. dialog1.sh
+2. dialog2.sh
+3. dialog3.sh
+4. dialog4.sh
+5. dialog5.sh
+6. dialog6.sh
+
+## Putting It All Together
+
+Try It Out:
+1. cd.sh
