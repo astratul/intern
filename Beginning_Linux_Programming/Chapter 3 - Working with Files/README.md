@@ -62,17 +62,94 @@ Each running program, called a process, has a number of file descriptors associa
 - 1: Standard output
 - 2: Standard error
 
-### WRITE
+### write
+
+```
+#include <unistd.h>
+size_t write(int fildes, const void *buf, size_t nbytes);
+```
 
 The write system call arranges for the first nbytes bytes from buf to be written to the file associated with the file descriptor fildes . It returns the number of bytes actually written. This may be less than nbytes if there has been an error in the file descriptor or if the underlying device driver is sensitive to block size. If the function returns 0, it means no data was written; if it returns –1, there has been an error in the write call, and the error will be specified in the errno global variable.
 
 simple_write.c
 
-### READ
+### read
+
+```
+#include <unistd.h>
+size_t read(int fildes, void *buf, size_t nbytes);
+```
 
 The read system call reads up to nbytes bytes of data from the file associated with the file descriptor fildes and places them in the data area buf . It returns the number of data bytes actually read, which may be less than the number requested. If a read call returns 0, it had nothing to read; it reached the end of the file. Again, an error on the call will cause it to return –1.
 
 simple_read.c
 
-### OPEN
+### open
 
+open establishes an access path to a file or device
+
+```
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+int open(const char *path, int oflags);
+int open(const char *path, int oflags, mode_t mode);
+```
+
+* O_RDONLY - Open for read-only
+* O_WRONLY - Open for write-only
+* O_RDWR - Open for reading and writing
+
+The call may also include a combination (using a bitwise OR) of the following optional modes in the oflags parameter:
+* O_APPEND : Place written data at the end of the file.
+* O_TRUNC : Set the length of the file to zero, discarding existing contents.
+* O_CREAT : Creates the file, if necessary, with permissions given in mode .
+* O_EXCL : Used with O_CREAT , ensures that the caller creates the file. The open is atomic; that is, it’s performed with just one function call. This protects against two programs creating the file at the same time. If the file already exists, open will fail.
+
+open returns the new file descriptor (always a nonnegative integer) if successful, or –1 if it fails, at which time open also sets the global variable errno to indicate the reason for the failure.
+
+
+### Initial Permissions
+
+When you create a file using the O_CREAT flag with open , you must use the three-parameter form. mode , the third parameter, is made from a bitwise OR of the flags defined in the header file sys/stat.h . These are:
+* S_IRUSR : Read permission, owner
+* S_IWUSR : Write permission, owner
+* S_IXUSR : Execute permission, owner
+* S_IRGRP : Read permission, group
+* S_IWGRP : Write permission, group
+* S_IXGRP : Execute permission, group
+* S_IROTH : Read permission, others
+* S_IWOTH : Write permission, others
+* S_IXOTH : Execute permission, others
+
+```
+open (“myfile”, O_CREAT, S_IRUSR|S_IXOTH);
+```
+has the effect of creating a file called myfile , with read permission for the owner and execute permission for others, and only those permissions.
+```
+$ ls -ls myfile
+0 -r-------x 1 neil software    0 Sep 22 08:11 myfile*
+```
+There are a couple of factors that may affect the file permissions. First, the permissions specified are used only if the file is being created. Second, the user mask (specified by the shell’s umask command) affects the created file’s permissions. The mode value given in the open call is ANDed with the inverse of the user mask value at runtime.
+
+#### umask
+
+* The umask is a system variable that encodes a mask for file permissions to be used when a file is created.
+* You can change the variable by executing the umask command to supply a new value. The value is a three-digit octal value. Each digit is the result of ORing values from 1, 2, or 4; the meanings are shown in the following table. The separate digits refer to “user,” “group,” and “other” permissions.
+
+### close
+
+You use close to terminate the association between a file descriptor, fildes , and its file. The file descriptor becomes available for reuse. It returns 0 if successful and –1 on error.
+```
+#include <unistd.h>
+int close(int fildes);
+```
+
+### ioctl
+
+```
+#include <unistd.h>
+int ioctl(int fildes, int cmd, ...);
+```
+
+It provides an interface for controlling the behavior of devices and their descriptors and configuring underlying services. Terminals, file descriptors, sockets, and even tape drives may have ioctl calls defined for them and you need to refer to the specific device’s man page for details. POSIX defines only ioctl for streams, which are beyond the scope of this book.
