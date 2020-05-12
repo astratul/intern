@@ -190,6 +190,8 @@ lseek returns the offset measured in bytes from the beginning of the file that t
 
 #### fstat, stat, and lstat
 
+The fstat system call returns status information about the file associated with an open file descriptor. The information is written to a structure, buf , the address of which is passed as a parameter.
+
 ```
 #include <unistd.h>
 #include <sys/stat.h>
@@ -198,3 +200,71 @@ int fstat(int fildes, struct stat *buf);
 int stat(const char *path, struct stat *buf);
 int lstat(const char *path, struct stat *buf);
 ```
+#### dup and dup2
+
+The dup system calls provide a way of duplicating a file descriptor, giving two or more different descriptors that access the same file.
+
+```
+#include <unistd.h>
+int dup(int fildes);
+int dup2(int fildes, int fildes2);
+```
+
+### The Standard I/O Librar y
+
+The standard I/O library (stdio) and its header file, stdio.h , provide a versatile interface to low-level I/O system calls.
+
+#### fopen, fread, fwrite, fclose, fseek
+
+analog functions of the low-level open, read, write, close, lseek system call.You use it mainly for files and terminal input and output.
+
+#### fgetc, getc, and getchar
+
+The fgetc function returns the next byte, as a character, from a file stream. When it reaches the end of the file or there is an error, it returns EOF . You must use ferror or feof to distinguish the two cases.
+
+```
+#include <stdio.h>
+int fgetc(FILE *stream);
+int getc(FILE *stream);
+int getchar();
+```
+The getc function is equivalent to fgetc , except that it may be implemented as a macro. In that case the stream argument may be evaluated more than once so it does not have side effects (for example, it shouldn’t affect variables). Also, you can’t guarantee to be able use the address of getc as a func-
+tion pointer. The getchar function is equivalent to getc(stdin) and reads the next character from the standard input.
+
+#### fputc, putc, and putchar
+
+The fputc function writes a character to an output file stream. It returns the value it has written, or EOF on failure.
+
+```
+#include <stdio.h>
+int fputc(int c, FILE *stream);
+int putc(int c, FILE *stream);
+int putchar(int c);
+```
+
+#### fgets and gets
+
+The fgets function reads a string from an input file stream .
+```
+#include <stdio.h>
+char *fgets(char *s, int n, FILE *stream);
+char *gets(char *s);
+```
+
+fgets writes characters to the string pointed to by s until a newline is encountered, n-1 characters have been transferred, or the end of file is reached, whichever occurs first. Any newline encountered is transferred to the receiving string and a terminating null byte, \0 , is added. Only a maximum of n-1 characters are transferred in any one call because the null byte must be added to mark the end of the string and bring the total up to n bytes.
+
+When it successfully completes, fgets returns a pointer to the string s . If the stream is at the end of a file, it sets the EOF indicator for the stream and fgets returns a null pointer. If a read error occurs, fgets returns a null pointer and sets errno to indicate the type of error.
+
+The gets function is similar to fgets , except that it reads from the standard input and discards any newline encountered. It adds a trailing null byte to the receiving string.
+
+
+## Formatted Input and Output
+
+### printf, fprintf, and sprintf
+### scanf, fscanf, and sscanf
+### Other Stream Functions
+
+Try It Out:
+copy_stdio.c
+
+### Stream Errors
