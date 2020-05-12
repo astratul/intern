@@ -153,3 +153,48 @@ int ioctl(int fildes, int cmd, ...);
 ```
 
 It provides an interface for controlling the behavior of devices and their descriptors and configuring underlying services. Terminals, file descriptors, sockets, and even tape drives may have ioctl calls defined for them and you need to refer to the specific device’s man page for details. POSIX defines only ioctl for streams, which are beyond the scope of this book.
+
+Try It Out
+1. First you will need to make a test input file, say 1Mb in size, and name it file.in .
+
+```
+$ truncate -s 1M file.in
+```
+2. Then compile copy_system.c.
+```
+TIMEFORMAT=”“ time ./copy_system
+$ ls -ls file.in file.out
+```
+
+You can improve matters by copying in larger blocks. Take a look at this modified program, copy_block.c .
+
+### Other System Calls for Managing Files
+
+#### lseek
+
+The lseek system call sets the read/write pointer of a file descriptor, fildes ; that is, you can use it to set where in the file the next read or write will occur. You can set the pointer to an absolute location in the file or to a position relative to the current position or the end of file.
+
+```
+#include <unistd.h>
+#include <sys/types.h>
+off_t lseek(int fildes, off_t offset, int whence);
+```
+
+The offset parameter is used to specify the position, and the whence parameter specifies how the offset is used. whence can be one of the following:
+* SEEK_SET : offset is an absolute position
+* SEEK_CUR : offset is relative to the current position
+* SEEK_END : offset is relative to the end of the file
+
+lseek returns the offset measured in bytes from the beginning of the file that the file pointer is set to, or –1 on failure. The type off_t , used for the offset in seek operations, is an implementation-dependent integer type defined in sys/types.h .
+
+
+#### fstat, stat, and lstat
+
+```
+#include <unistd.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+int fstat(int fildes, struct stat *buf);
+int stat(const char *path, struct stat *buf);
+int lstat(const char *path, struct stat *buf);
+```
