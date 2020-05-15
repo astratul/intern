@@ -174,8 +174,8 @@ The mkstemp function is similar to tmpfile in that it creates and opens a tempor
 
 ## User Information
 
-You can set up programs to run as if a different user had started them. When a program has its UID permission set, it will run as if started by the owner of the executable file. When the su command is executed, the program runs as if it had been started by the superuser. It then validates the user’s access, changes the UID to that of the target account, and executes that account’s login shell. This also allows a program to be run as if a different user had started it and is often used by system administrators to perform maintenance tasks.
-Because the UID is key to the user’s identity, let’s start with that.
+* You can set up programs to run as if a different user had started them. When a program has its UID permission set, it will run as if started by the owner of the executable file. When the su command is executed, the program runs as if it had been started by the superuser. It then validates the user’s access, changes the UID to that of the target account, and executes that account’s login shell. This also allows a program to be run as if a different user had started it and is often used by system administrators to perform maintenance tasks.
+* Because the UID is key to the user’s identity, let’s start with that.
 The UID has its own type — uid_t — defined in sys/types.h . It’s normally a small integer. Some are predefined by the system; others are created by the system administrator when new users are made known to the system. Normally, users usually have UID values larger than 100.
 
 ```
@@ -184,9 +184,9 @@ The UID has its own type — uid_t — defined in sys/types.h . It’s normally 
 uid_t getuid(void);
 char *getlogin(void);
 ```
-The getuid function returns the UID with which the program is associated. This is usually the UID of the user who started the program.
-The getlogin function returns the login name associated with the current user.
-The system file /etc/passwd contains a database dealing with user accounts. It consists of lines, one per user, that contain the username, encrypted password, user identifier (UID), group identifier (GID), full name, home directory, and default shell. Here’s an example line:
+* The getuid function returns the UID with which the program is associated. This is usually the UID of the user who started the program.
+* The getlogin function returns the login name associated with the current user.
+* The system file /etc/passwd contains a database dealing with user accounts. It consists of lines, one per user, that contain the username, encrypted password, user identifier (UID), group identifier (GID), full name, home directory, and default shell. Here’s an example line:
 neil:zBqxfqedfpk:500:100:Neil Matthew:/home/neil:/bin/bash
 
 ```
@@ -199,6 +199,98 @@ struct passwd *getpwnam(const char *name);
 #### Try It Out
 * user.c
 
-
+```
+#include <sys/types.h>
+#include <unistd.h>
+uid_t geteuid(void);
+gid_t getgid(void);
+gid_t getegid(void);
+int setuid(uid_t uid);
+int setgid(gid_t gid);
+```
+Only the superuser can call setuid and setgid .
 ## Host Information
+
+* Host information can be useful in a number of situations. You might want to customize a program’s behavior, depending on the name of the machine it’s running on in a network, say, a student’s machine or an administrator’s. For licensing purposes, you might want to restrict a program to running on one machine only. All this means that you need a way to establish which machine the program is running on.
+* If the system has networking components installed, you can obtain its network name very easily with the gethostname function:
+
+```
+#include <unistd.h>
+int gethostname(char *name, size_t namelen);
+```
+The gethostname function writes the machine’s network name into the string name . This string is assumed to be at least namelen characters long. gethostname returns 0 if successful and –1 otherwise.
+
+```
+#include <sys/utsname.h>
+int uname(struct utsname *name);
+```
+The uname function writes host information into the structure pointed to by the name parameter.
+
+#### Try It Out
+* hostget.c
+
+## Logging
+
+Many applications need to record their activities. System programs very often will write messages to the console, or a log file. These messages might indicate errors, warnings, or more general information about the state of the system. For example, the su program might record the fact that a user has tried and failed to gain superuser privileges.
+
+Very often, these log messages are recorded in system files in a directory made available for that purpose. This might be / usr/adm or /var/log . On a typical Linux installation, the file /var/log/messages contains all system messages, /var/log/mail contains other log messages from the mail system, and /var/log/debug may contain debug messages. You can check your system’s configuration in the /etc/syslog.conf or /etc/syslog-ng/syslog-ng.conf files, depending on your Linux version.
+
+#### You may require superuser privilege to view log messages.
+```
+#include <syslog.h>
+void syslog(int priority, const char *message, arguments...);
+```
+* The syslog function sends a logging message to the logging facility. Each message has a priority argument that is a bitwise OR of a severity level and a facility value. The severity level controls how the log message is acted upon and the facility value records the originator of the message.
+
+#### Try It Out
+* syslog.c
+
+```
+#include <syslog.h>
+void closelog(void);
+void openlog(const char *ident, int logopt, int facility);
+int setlogmask(int maskpri);
+```
+#### Try It Out
+* logmask.c
+
+This logmask.c program produces no output, but on a typical Linux system, toward the end of /var/log/messages , you should see the following line:
+Jun 9 09:28:52 suse103 logmask[19339]: informative message, pid = 19339
+#### How It Works
+The program initializes the logging facility with its name, logmask , and requests that log messages contain the process identifier. The informative message is logged to /var/log/messages , and the debug message to /var/log/debug . The second debug message doesn’t appear because you call setlogmask to ignore all messages with a priority below LOG_NOTICE .
+
+```
+#include <sys/types.h>
+#include <unistd.h>
+pid_t getpid(void);
+pid_t getppid(void);
+```
+
+## Resources and Limits
+
+```
+#include <sys/resource.h>
+int getpriority(int which, id_t who);
+int setpriority(int which, id_t who, int priority);
+int getrlimit(int resource, struct rlimit *r_limit);
+int setrlimit(int resource, const struct rlimit *r_limit);
+int getrusage(int who, struct rusage *r_usage);
+```
+* The timeval structure is defined in sys/time.h and contains fields tv_sec and tv_usec , representing seconds and microseconds, respectively.
+* CPU time consumed by a program is separated into user time (the time that the program itself has consumed executing its own instructions) and system time (the CPU time consumed by the operating system on the program’s behalf; that is, the time spent in system calls performing input and output or other system functions).
+* The getrusage function writes CPU time information to the rusage structure pointed to by the parameter r_usage .
+
+#### Ordinary users are only able to reduce the priorities of their programs, not increase them.
+
+* Applications can determine and alter their (and others’) priority with the getpriority and setpriority functions. The process to be examined or changed by the priority functions can be identified either by process identifier, group identifier, or user. The which parameter specifies how the who parameter is to be treated.
+
+priority = getpriority(PRIO_PROCESS, getpid());
+
+* getpriority returns a valid priority if successful or a –1 with errno set on error. Because –1 is itself a valid priority, errno should be set to zero before calling getpriority and checked that it’s still zero on return. setpriority returns 0 if successful, –1 otherwise.
+* A number of system resources can be limited. These are specified by the resource parameter of the
+rlimit functions and are defined in sys/resource.h
+
+#### Try It Out
+* limits.c
+
 
