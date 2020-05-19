@@ -43,9 +43,53 @@ $ ./menu2 >file 2>&1
 
 ## Talking to the Terminal
 
+Fortunately, Linux and UNIX make things easy by providing a special device, /dev/tty , which is always the current terminal, or login session. Because Linux treats everything as a file, you can use normal file operations to read and write to /dev/tty .
+
+#### Try It Out
+* menu3.c
+
 ## The Terminal Driver and the General Terminal Interface
 
+Sometimes a program needs much finer control over the terminal than can be achieved using simple file operations. Linux provides a set of interfaces that allow you to control the behavior of the terminal driver, giving you much greater control of the processing of terminal input and output.
+
+The main features that you can control are
+* Line editing: Choose whether to allow Backspace for editing.
+* Buffering: Choose whether to read characters immediately, or read them after a configurable delay.
+* Echo: Allows you to control echoing, such as when reading passwords.
+* CR/LF: Determine mapping for input and output: what happens when you print a line feed character ( \n ).
+* Line speeds: Rarely used on a PC console, these speeds are very important for modems and terminals on serial lines.
+
+### Hardware Model 
+
+
 ## The termios Structure
+
+termios is the standard interface specified by POSIX and is similar to the System V interface termio . The terminal interface is controlled by setting values in a structure of type termios and using a small set of function calls. Both are defined in the header file termios.h .
+
+### Input Modes
+
+### Output Modes
+
+### Control Modes
+
+### Local Modes
+
+### Special Control Characters
+
+#### Characters
+
+#### The TIME and MIN Values
+
+#### Accessing Terminal Modes from the Shell
+
+#### Setting Terminal Modes from the Command Prompt
+
+### Terminal Speed
+
+### Additional Functions
+
+##### Try It Out
+* 
 
 ## Terminal Output
 
