@@ -132,6 +132,8 @@ int standend(void);
 #### Try It Out
 * moveadd.c
 
+By using the attron and attroff functions, you controlled the attributes of the text written out at each location. The program then demonstrated how characters can be inserted with insch , before closing the curses library and terminating.
+
 ## The Keyboard
 
 ### Keyboard Modes
@@ -139,26 +141,172 @@ int standend(void);
 #include <curses.h>
 int echo(void);
 int noecho(void);
+// turn the echoing of typed characters on and off
 int cbreak(void);
 int nocbreak(void);
 int raw(void);
 int noraw(void)
+// control how characters typed on the terminal are made available to the curses program
 ```
-### Keyboard Input
 
+When a curses program starts by
+calling initscr , the input mode is set to what is termed cooked mode. This means that all processing is done on a line-by-line basis; that is, input is only available after the user has pressed Enter (or the Return key on some keyboards). Keyboard special characters are enabled, so typing the appropriate key sequences can generate a signal in the program. Flow control, if the terminal is running from a terminal, is also enabled.
+By calling cbreak , a program may set the input mode to cbreak mode whereby characters are available to the program immediately after they are typed, rather than being buffered up and only made available to the program when Enter is pressed. As in cooked mode, keyboard special characters are enabled, but
+simple keys, such as Backspace, are passed directly to the program to be processed, so if you want the Backspace key to function as expected, you have to program it yourself.
+A call to raw turns off special character processing, so it becomes impossible to generate signals or flow control by typing special character sequences.
+Calling nocbreak sets the input mode back to cooked mode, but leaves special character processing unchanged; calling noraw restores both cooked mode and special character handling.
+
+### Keyboard Input
+```
+#include <curses.h>
+int getch(void);
+int getstr(char *string); //provides no way of limiting the string length returned
+int getnstr(char *string, int number_of_characters); // allows you to limit the number of characters read
+int scanw(char *format, ...);
+```
 
 #### Try It Out
-* 
-
+* ipmode.c
 
 ## Windows
 
+### The WINDOW Structure
+You can create and destroy windows using the newwin and delwin calls:
+```
+#include <curses.h>
+WINDOW *newwin(int num_of_lines, int num_of_cols, int start_y, int start_x); // creates a new window with a screen location of (start_y,start_x) and with the specified number of lines and column. It returns a pointer to the new window, or null if the creation failed.
+int delwin(WINDOW *window_to_delete); // deletes a window previously created by newwin
+```
+##### Take care never to try to delete curses ’ own windows, stdscr and curscr !
+
+### Generalized Functions
+You’ve already used the addch and printw functions for adding characters to the screen. Along with many other functions, these can be prefixed, either with a w for window, mv for move, or mvw for move and window. If you look in the curses header file for most implementations of curses , you’ll find that many of the functions used so far are simply macros ( #defines ) that call these more general functions.
+When the w prefix is added, an additional WINDOW pointer must be pre-pended to the argument list. When the mv prefix is added, two additional parameters, a y and an x location, must be pre-pended. These specify the location where the operation will be performed. The y and x are relative to the window, rather than the screen, (0 , 0) being the top left of the window.
+When the mvw prefix is added, three additional parameters, a WINDOW pointer and both y and x values, must be passed. Confusingly, the WINDOW pointer always comes before the screen coordinates, even though the prefix might suggest the y and x come first.
+As an example, here is the full set of prototypes for just the addch and printw sets of functions:
+```
+#include <curses.h>
+int addch(const chtype char);
+int waddch(WINDOW *window_pointer, const chtype char)
+int mvaddch(int y, int x, const chtype char);
+int mvwaddch(WINDOW *window_pointer, int y, int x, const chtype char);
+int printw(char *format, ...);
+int wprintw(WINDOW *window_pointer, char *format, ...);
+int mvprintw(int y, int x, char *format, ...);
+int mvwprintw(WINDOW *window_pointer, int y, int x, char *format, ...);
+```
+Many other functions, such as inch , also have move and window variants available.
+
+### Moving and Updating a Window
+
+```
+#include <curses.h>
+// enable you to move and redraw windows
+int mvwin(WINDOW *window_to_move, int new_y, int new_x); // moves a window on the screen
+int wrefresh(WINDOW *window_ptr);
+int wclear(WINDOW *window_ptr);
+int werase(WINDOW *window_ptr); //all 3  - take a WINDOW pointer so that they can refer to a specific window, rather than stdscr
+
+int touchwin(WINDOW *window_ptr); // informs the curses library that the contents of the window pointed to by its parameter have been changed
+int scrollok(WINDOW *window_ptr, bool scroll_flag); // for true (usually nonzero) allows a window to scroll. By default, windows can’t scroll.
+int scroll(WINDOW *window_ptr); // scrolls the window up one line
+```
+
+#### Try It Out
+* multiw1.c
+
+After the usual initialization, the program fills the standard screen with numbers, to make it easier to see the new curses windows being added on top. It then demonstrates how a new window can be added over the background, with text inside the new window wrapping. You then saw how to use touchwin to force curses to redraw the window, even if nothing has been changed.
+A second window was then added which overlapped the first window, to demonstrate how curses can mange overlapping windows, before the program closes the curses library and exits.
+### Optimizing Screen Refreshes
+```
+#include <curses.h>
+int wnoutrefresh(WINDOW *window_ptr); // determines which characters would need sending to the screen, but doesn’t actually send them.
+int doupdate(void); // sends the changes to the terminal.
+```
+
 ## Subwindows
 
+```
+#include <curses.h>
+WINDOW *subwin(WINDOW *parent, int num_of_lines, int num_of_cols,
+int start_y, int start_x); //  make a subwindow
+int delwin(WINDOW *window_to_delete); // subwindows are deleted
+```
+
+##### One restriction imposed by using subwindows is that the application should call touchwin on the parent window before refreshing the screen.
+
+#### Try It Out
+* subscl.c
+
 ## The Keypad
+The translation between the sequences and logical keys is disabled when curses starts and has to be turned on by the keypad function. If the call succeeds, then it returns OK ; otherwise it returns ERR :
+```
+#include <curses.h>
+int keypad(WINDOW *window_ptr, bool keypad_on);
+```
+Once keypad mode has been enabled by calling keypad with keypad_on set to true , curses takes over the processing of key sequences so that reading the keyboard may now not only return the key that was pressed, but also one of the KEY_ defines for logical keys.
+
+#### Try It Out
+* keypad.c
 
 ## Using Color
+```
+#include <curses.h>
+bool has_colors(void); //returns true if color is supported
+int start_color(void); //returns OK if color has been initialized successfully
+```
+Before you can use colors as attributes, you must initialize the color pairs that you wish to use. You do this with the init_pair function. Color attributes are accessed with the COLOR_PAIR function:
+```
+#include <curses.h>
+int init_pair(short pair_number, short foreground, short background);
+int COLOR_PAIR(int pair_number);
+int pair_content(short pair_number, short *foreground, short *background);
+```
+curses.h usually defines some basic colors, starting with COLOR_ . An additional function, pair_content , allows previously defined color-pair information to be retrieved.
+
+```
+init_pair(1, COLOR_RED, COLOR_GREEN); // To define color pair number 1 to be red on green, you would use this
+wattron(window_ptr, COLOR_PAIR(1)); // access this color pair as an attribute, using COLOR_PAIR
+wattron(window_ptr, COLOR_PAIR(1) | A_BOLD);
+```
+#### Try It Out
+* color.c
+
+### Redefining Colors
+```
+#include <curses.h>
+int init_color(short color_number, short red, short green, short blue);
+```
+This allows an existing color (in the range 0 to COLORS ) to be redefined with new intensity values in the range 0 to 1,000. This is a little like defining color values for GIF format image files.
 
 ## Pads
+A pad structure is very similar to a WINDOW structure, and all the curses routines that write to windows can also be used on pads. However, pads do have their own routines for creation and refreshing.
+You create pads in much the same way that you create normal windows:
+```
+#include <curses.h>
+WINDOW *newpad(int number_of_lines, int number_of_columns);
+```
+Note that the return value is a pointer to a WINDOW structure, the same as newwin . Pads are deleted with delwin , just like windows.
+
+Do this with the prefresh function:
+```
+#include <curses.h>
+int prefresh(WINDOW *pad_ptr, int pad_row, int pad_column,
+int screen_row_min, int screen_col_min,
+int screen_row_max, int screen_col_max);
+```
+#### Try It Out
+* pad.c
 
 ## The CD Collection Application
+
+### Starting a New CD Collection Application
+### Looking at main
+main enables you to make selections from the menu until you select quit .
+### Building the Menu
+The getchoice function called by main is the principal function in this section. getchoice is passed greet , an introduction, and choices , which points either to the main or to the extended menu (depending on whether a CD has been selected). You can see how either main_menu or extended_menu is passed as a parameter in the preceding main function
+### Database File Manipulation
+#### Adding Records
+#### Updating Records
+#### Removing Records
+### Querying the CD Database
