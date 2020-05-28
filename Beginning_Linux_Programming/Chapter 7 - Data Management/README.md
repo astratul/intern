@@ -170,25 +170,61 @@ Using a database is better than storing files for two reasons:
 ### The dbm Database
 
 #### Introduction to dbm
+The dbm database enables you store data structures of variable size, using an index, and then retrieve the structure either using the index or simply by sequentially scanning the database. The dbm database is best used for data that is accessed frequently but updated rarely, because it tends to be rather slow to create entries but quick to retrieve them.
 
 #### Getting dbm
+
+Most mainstream Linux distributions come with a version of gdbm already installed, although on a few distributions you may need to use the relevant package manager to install the appropriate development libraries. For example, on Ubuntu you may need to use the Synaptic package manager to install the libgdbm-dev package, as it is not generally installed by default.
 
 #### Troubleshooting and Reinstalling dbm
 
 ### The dbm Routines
 
+Like curses , which we discussed in Chapter 6, the dbm facility consists of a header file and a library that must be linked when the program is compiled. The library is called simply dbm , but because we are normally using the GNU implementation on Linux, we need to link against this implementation using ```-lgdbm```  on the compilation line. The header file is ````ndbm.h```` .
+
+The dbm database’s basic element is a block of data to store, coupled with a companion block of data that acts as a key for retrieving that data. Each dbm database must have a unique key for each block of data to be stored. The key value acts as an index into the data stored. There’s no restriction on either the keys or the data, nor are any errors defined for using data or keys that are too large.
+
+To manipulate these blocks as data, the ```ndbm.h``` include file defines a new type called datum . The exact content of this type is implementation dependent, but it must have at least the following members:
+```
+void *dptr;
+size_t dsize
+```
+```datum``` will be a type defined by a typedef . Also declared in the ```ndbm.h``` file is a type definition for dbm , which is a structure used for accessing the database, much like a FILE is used for accessing files. The internals of the dbm typedef are implementation dependent and should never be used. 
+
+To reference a block of data when you’re using the dbm library, you must declare a datum , set ```dptr``` to point to the start of the data, and set ```dsize``` to contain its size. Both the data to store and the index used to access it are always referenced by a datum type.
+
+The ```dbm``` type is best thought of as analogous to a FILE type. When you open a dbm database, two physical files are normally created: one with a ```.pag``` extension and one with a ```.dir``` extension. A single dbm pointer is returned, which is used to access these two files as a pair. The files should never be read or written to directly; they are intended to be accessed only via the dbm routines.
+#### In some implementations the two files have been merged and only a single new file is created.
+
+If you’re familiar with SQL databases, you’ll notice that there are no table or column structures associated with a ```dbm``` database. These structures are unnecessary because dbm neither imposes a fixed size on each item of data to be stored nor requires internal structure to the data. The ```dbm``` library works on blocks of unstructured binary data.
+
 ### dbm Access Functions
+The prototypes for the main dbm functions are as follows:
+```
+#include <ndbm.h>
+DBM *dbm_open(const char *filename, int file_open_flags, mode_t file_mode);
+int dbm_store(DBM *database_descriptor, datum key, datum content, int store_mode);
+datum dbm_fetch(DBM *database_descriptor, datum key);
+void dbm_close(DBM *database_descriptor);
+```
 
 #### dbm_open
+This function is used to open existing databases and can be used to create new databases. The filename argument is a base filename, without a ```.dir``` or ```.pag``` extension.
 
+If you are creating a new database, the flags must be binary ```O_RED``` with ```O_CREAT``` to allow the files to be created. The third argument specifies the initial permissions of the files that will be created.
+```dbm_open``` returns a pointer to a DBM type. This is used in all subsequent accesses of the database. On failure, a (DBM *)0 is returned.
 #### dbm_store
+
+You use this function for entering data into the database.
+To define the data you wish to store and the index used to refer to it, you must set up two datum types: one to refer to the index and one for the actual data. The final parameter, store_mode , controls what happens if an attempt is made to store some data using a key that already exists. If it’s set to dbm_insert , the store fails and dbm_store returns 1. If it’s set to dbm_replace , the new data overwrites the existing data and dbm_store returns 0. dbm_store will return negative numbers on other errors.
 
 #### dbm_fetch
 
+The dbm_fetch routine is used for retrieving data from the database. It takes a dbm pointer, as returned from a previous call to dbm_open , and a datum type, which must be set up to point to a key. A datum type is returned. If the data relating to the key used was found in the database, the returned datum structure will have dptr and dsize values set up to refer to the returned data. If the key was not found, the dptr will be set to null .
 #### dbm_close
-
+This routine closes a database opened with dbm_open and must be passed a dbm pointer returned from a previous call to dbm_open .
 #### Try It Out
-* 
+* dbm1.c
 
 ### Additional dbm Functions
 
