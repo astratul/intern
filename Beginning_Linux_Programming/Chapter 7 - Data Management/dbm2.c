@@ -1,13 +1,13 @@
-// gcc -o dbm1 -I/usr/include/gdbm dbm1.c -lgdbm
-// gcc -o dbm1 –I/usr/include/gdbm dbm1.c -lgdbm_compat –lgdbm
+// gcc -o dbm2 -I/usr/include/gdbm dbm2.c -lgdbm
+// gcc -o dbm2 –I/usr/include/gdbm dbm2.c -lgdbm_compat –lgdbm
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <fcntl.h>
-// #include <ndbm.h>
+#include <ndbm.h>
 // #include <gdbm-ndbm.h>
 #include <string.h>
-#define TEST_DB_FILE "/tmp/dbm1_test"
+#define TEST_DB_FILE "/tmp/dbm2_test"
 #define ITEMS_USED 3
 struct test_data
 {
@@ -25,7 +25,7 @@ int main()
     datum data_datum;
     DBM *dbm_ptr;
     // Having declared a pointer to a dbm type structure, now open your test database for reading and writing, creating it if necessary
-    
+
     dbm_ptr = dbm_open(TEST_DB_FILE, O_RDWR | O_CREAT, 0666);
     if (!dbm_ptr)
     {
@@ -44,7 +44,7 @@ int main()
     items_to_store[2].any_integer = 3;
     strcpy(items_to_store[2].more_chars, "baz");
     // For each entry, you need to build a key for future referencing
-    
+
     for (i = 0; i < ITEMS_USED; i++)
     {
         sprintf(key_to_use, "%c%c%d",
@@ -65,19 +65,34 @@ int main()
     sprintf(key_to_use, "bu%d", 13);
     key_datum.dptr = key_to_use;
     key_datum.dsize = strlen(key_to_use);
-    data_datum = dbm_fetch(dbm_ptr, key_datum);
-    if (data_datum.dptr)
+
+    if (dbm_delete(dbm_ptr, key_datum) == 0)
     {
-        printf("Data retrieved\n");
-        memcpy(&item_retrieved, data_datum.dptr, data_datum.dsize);
-        printf("Retrieved item - %s %d %s\n",
-               item_retrieved.misc_chars,
-               item_retrieved.any_integer,
-               item_retrieved.more_chars);
+        printf("Data with key %s deleted\n", key_to_use);
     }
     else
     {
-        printf("No data found for key %s\n", key_to_use);
+        printf("Nothing deleted for key %s\n", key_to_use);
+    }
+    for (key_datum = dbm_firstkey(dbm_ptr);
+         key_datum.dptr;
+         key_datum = dbm_nextkey(dbm_ptr))
+    {
+
+        data_datum = dbm_fetch(dbm_ptr, key_datum);
+        if (data_datum.dptr)
+        {
+            printf("Data retrieved\n");
+            memcpy(&item_retrieved, data_datum.dptr, data_datum.dsize);
+            printf("Retrieved item - %s %d %s\n",
+                   item_retrieved.misc_chars,
+                   item_retrieved.any_integer,
+                   item_retrieved.more_chars);
+        }
+        else
+        {
+            printf("No data found for key %s\n", key_to_use);
+        }
     }
     dbm_close(dbm_ptr);
     exit(EXIT_SUCCESS);

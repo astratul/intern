@@ -224,20 +224,41 @@ The dbm_fetch routine is used for retrieving data from the database. It takes a 
 #### dbm_close
 This routine closes a database opened with dbm_open and must be passed a dbm pointer returned from a previous call to dbm_open .
 #### Try It Out
-* dbm1.c
+* dbm1.c // ??
 
 ### Additional dbm Functions
 
+```
+int dbm_delete(DBM *database_descriptor, datum key);
+int dbm_error(DBM *database_descriptor);
+int dbm_clearerr(DBM *database_descriptor);
+datum dbm_firstkey(DBM *database_descriptor);
+datum dbm_nextkey(DBM *database_descriptor);
+```
 #### dbm_delete
+
+The dbm_delete function is used to delete entries from the database. It takes a key datum just like dbm_fetch but rather than retrieve the data, it deletes the data. It returns 0 on success.
 
 #### dbm_error
 
+The dbm_error function simply tests whether an error has occurred in the database, returning 0 if there
+is none.
+
 #### dbm_clearerr
+
+The dbm_clearerr clears any error condition flag that may be set in the database.
 
 #### dbm_firstkey and dbm_nextkey
 
+These routines are normally used as a pair to scan through all the keys of all the items in a database. The loop structure required is as follows:
+```
+DBM *db_ptr;
+datum key;
+for(key = dbm_firstkey(db_ptr); key.dptr; key = dbm_nextkey(db_ptr));
+```
 #### Try It Out
-* 
+* dbm2.c
+
 ## The CD Application
 ### Updating the Design
 
