@@ -1,0 +1,7 @@
+# Dependencies
+# all: myapp myapp.1
+myapp: main.o 2.o 3.o
+main.o: main.c a.h
+2.o: 2.c a.h b.h
+3.o: 3.c b.h c.h
+# Rules
