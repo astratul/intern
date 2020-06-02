@@ -53,7 +53,9 @@ In fact, make has several special internal macros that you can use to make makef
 * $* - Name of the current prerequisite, without any suffix
 * '-'  - tells make to ignore any errors.
 * @ - tells make not to print the command to standard output before executing it. This character is handy if you want to use echo to display some instructions.
+
 #### Multiple Targets
+
 ### Try It Out
 ``` 
 rm *.o myapp
@@ -64,6 +66,7 @@ make -f makefile3 install
 make -f makefile3 clean
 ```
 #### Built-in Rules
+
 ### Try It Out
 * foo.c
 ```
@@ -71,5 +74,81 @@ make foo
 rm foo
 make CC=gcc CFLAGS=”-Wall -g” foo
 ```
+### Suffix and Pattern Rules
 
+###  Managing Libraries with make
 
+### Try It Out
+```
+rm -f myapp *.o mylib.a
+make -f Makefile5
+touch c.h
+make -f Makefile5
+```
+### Advanced Topic: Makefiles and Subdirectories
+
+### GNU make and gcc
+#### Try It Out
+```
+gcc -MM main.c 2.c 3.c
+```
+
+## Source Code Control
+
+### RCS
+#### The rcs Command
+```
+rcs -i important.c
+ls -l
+```
+#### The ci Command
+```
+ci important.c
+ls -l
+```
+
+#### The co Command
+
+```
+co -l important.c
+ls -l
+ci important.c
+ls -l
+```
+#### The rlog Command
+```
+rlog important.c
+co -r1.1 important.c
+```
+#### The rcsdiff Command
+```
+rcsdiff -r1.1 -r1.2 important.c
+```
+### Identifying Revisions
+```
+co -l important.c
+# edit the  file important.c
+ci important.c
+ls -l
+rm -f important.c
+make important
+```
+#### The ident Command
+##### Try It Out
+```
+./important
+ident important
+```
+### SCCS
+
+#### Comparing RCS and SCCS
+
+## Writing a Manual Page
+
+## Distributing Software
+
+## RPM Packages
+
+## Other Package Formats
+
+## Development Environments
