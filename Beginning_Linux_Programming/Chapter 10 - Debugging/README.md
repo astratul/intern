@@ -113,17 +113,142 @@ You can execute the program with the run command. Any arguments that you give to
 ```
 (gdb) run
 ```
-### Stack Trace
 
+### Stack Trace
+```
+(gdb) backtrace
+```
+The backtrace command may be abbreviated bt , and, for compatibility with other debuggers, the where command has the same function.
+
+### Examining Variables
+```
+(gdb) print j
+(gdb) print a[j]
+(gdb) print a[3]
+(gdb) print a[$-1].key
+
+```
+### Listing the Program
+You can view the source code of the program from within gdb by using the list command. This prints out a portion of the code around the current position. Subsequent uses of list will print out more. You can also give list a function name as an argument and it will show the code at that position, or a pair of line numbers and it will list the code between those line numbers.
+```
+(gdb) list
+cc -g -o debug4 debug4.c
+./debug4
+```
+### Setting Breakpoints 
+
+To find out where the program is failing, you need to be able to see what it’s doing as it runs. You can stop the program at any point by setting breakpoints. These cause the program to stop and return control to the debugger. You’ll be able to inspect variables and then allow the program to continue.
+There are two loops in the sort function. The outer loop, with loop variable i , is run once for each element in the array. The inner loop swaps the element with those further down the list. This has the effect of bubbling up the smaller elements to the top. After each run of the outer loop, the largest element should have made its way to the bottom. You can confirm this by stopping the program at the outer loop and examining the state of the array.
+
+```
+(gdb) help breakpoint
+
+gdb debug4
+(gdb) break 24
+(gdb) run
+(gdb) print array[0]
+(gdb) print array[0]@5
+# To print a number of consecutive items, you can use the construction @<number> to cause gdb to print a number of array elements. To print all five elements of array , you can use
+(gdb) cont
+(gdb) print array[0]@5
+(gdb) display array[0]@5
+(gdb) commands
+> cont
+> end
+(gdb) cont
+```
+gdb reports that the program exits with an unusual exit code. This is because the program itself doesn’t call exit and doesn’t return a value from main . The exit code is effectively meaningless in this case, and a meaningful one ought to be provided by a call to exit .
+
+### Patching with the Debugger
+```
+(gdb) info display
+(gdb) info break
+# You can either disable these or delete them entirely. If you disable them, you retain the option to reenable them at a later time if you need to:
+(gdb) disable break 1
+(gdb) disable display 1
+(gdb) break 33
+(gdb) commands 2
+>set variable n = n+1
+>cont
+>end
+(gdb) run
+
+```
+### Learning More about gdb
 
 ## More Debugging Tools
 
+### Lint: Removing the Fluff from Your Programs
+```
+debug0.c
+splint -strict debug0.c
+```
+### Function Call Tools
 
+### ctags
+The ctags program creates an index of functions. For each function, you get a list of the places it’s used, like the index of a book.
+```
+ctags [-a] [-f filename] sourcefile sourcefile ...
+ctags -x sourcefile sourcefile ...
+```
+By default, ctags creates a file, called tags , in the current directory, which contains, for each function declared in any of the input source files, lines of the form
 
+### cxref
+
+The cxref program analyzes C source code and produces a cross-reference. It shows where each symbol (variable, #define , and function) is mentioned in the program. It produces a sorted list with each symbol’s definition location marked with an asterisk, as shown on next page.
+```
+cxref *.c *.h
+```
+### cflow
+The cflow program prints a function call tree, a diagram that shows which function calls which others, and which functions are called by them, and so on. It can be useful to find out the structure of a program to understand how it operates and to see what impact changes to a function will have. Some versions of cflow can operate on object files as well as source code.
+
+### Execution Profiling with prof/gprof
+A technique that is often useful when you’re trying to track down performance problems with a program is execution profiling. Normally supported by special compiler options and ancillary programs, a profile of a program shows where it’s spending its time.
+The prof program (and its GNU equivalent, gprof ) prints a report from an execution trace file that is produced when a profiled program is run. A profiled executable is created by specifying the –p flag (for prof ) or -pg flag (for gprof ) to the compiler:
+```
+cc -pg -o program program.c
+./program
+ls -ls
+```
 ## Assertions
 
+```
+#include <assert.h>
+void assert(int expression)
+```
+The assert macro evaluates the expression and, if it’s nonzero, writes some diagnostic information to the standard error and calls abort to end the program.
 
+#### Try It Out
+* assert.c
+```
+cc -o assert -DNDEBUG assert.c -lm
+./assert
+```
 
 ## Memory Debugging
+Typically, memory blocks are allocated by malloc and assigned to pointer variables. If the pointer variable is changed and there are no other pointers pointing to the memory block, it will become inaccessible. This is a memory leak and it causes your program to grow in size. If you leak a lot of memory, your system will eventually slow down and run out of memory.
+If you write beyond the end of an allocated block (or before the beginning of a block), you’ll very likely corrupt the data structures used by the malloc library to keep track of allocations. In this case, at some future time, a call to malloc , or even free , will cause a segmentation violation and your program will crash. Tracking down the precise point at which the fault occurred can be very difficult, because it may have happened a long time before the event that caused the crash. 
+Unsurprisingly, there are tools, commercial and free, that can help with these two problem types. There are, for example, many different versions of malloc and free , some of which contain additional code to check on allocations and deallocations to try to cater for the cases where a block is freed twice and some other types of misuse.
 
+### ElectricFence
+The ElectricFence library was developed by Bruce Perens. It is available as an optional component in some Linux distributions such as Red Hat (Enterprise and Fedora), SUSE and openSUSE, and can be readily found on the Internet. It attempts to use the virtual memory facilities of Linux to protect the memory used by malloc and free to halt the program at the point of memory corruption.
+
+#### Try It Out
+* efence.c
+```
+cc -o efence efence.c
+./efence
+
+cc -g -o efence efence.c -lefence
+gdb efence
+
+```
+### valgrind
+valgrind is a tool that is capable of detecting many of the problems that we have discussed. In particular, it can detect array access errors and memory leaks. It may not be included with your Linux distribution, but you can find it at http://valgrind.org .
+
+#### Try It Out
+* checker.c
+```
+valgrind --leak-check=yes -v ./checker
+```
 
