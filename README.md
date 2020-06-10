@@ -3,6 +3,8 @@
 2. The ANSI C programming language
 3. Beginning Linux Programming
 4. Robert_Love_Linux_Kernel_Development_3rd_Edition__2010
+5. Suppressing Jitter by Isolating Bare-Metal Tasks within a General-Purpose OS on x86 NUMA Systems
+6. Problem-solving in High Performance Computing
 
 # Internship
 1. "Hello World in C cu MakeFile si rep in GitHub"
