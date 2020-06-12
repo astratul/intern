@@ -5,7 +5,7 @@
 int main()
 {
     int data_processed;
-    int file_pipes[2];
+    int file_pipes[2]; // the address of which is passed to the pipe function as a parameter.
     const char some_data[] = "123";
     char buffer[BUFSIZ + 1];
     memset(buffer, '\0', sizeof(buffer));

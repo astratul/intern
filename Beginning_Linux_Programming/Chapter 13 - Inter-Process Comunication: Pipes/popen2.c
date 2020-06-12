@@ -7,7 +7,7 @@ int main()
 {
     FILE *write_fp;
     char buffer[BUFSIZ + 1];
-    sprintf(buffer, "Once upon a time, there was...\n");
+    sprintf(buffer, "Adriana Startulat-Diaconu\n");
     write_fp = popen("od -c", "w");
     if (write_fp != NULL)
     {

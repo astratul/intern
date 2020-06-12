@@ -14,7 +14,7 @@ int main()
         chars_read = fread(buffer, sizeof(char), BUFSIZ, read_fp);
         while (chars_read > 0)
         {
-            buffer[chars_read – 1] = '\0';
+            buffer[chars_read-1] = '\0';
             printf("Reading:-\n %s\n", buffer);
             chars_read = fread(buffer, sizeof(char), BUFSIZ, read_fp);
         }
