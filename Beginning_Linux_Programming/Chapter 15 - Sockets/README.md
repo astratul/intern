@@ -121,6 +121,10 @@ You can terminate a socket connection at the server and client by calling close 
 
 ### Host and Network Byte Ordering
 When we run these versions of the server and client programs on an Intel processor–based Linux machine, we can see the network connections by using the netstat command. This command will also be available on most UNIX systems configured for networking. It shows the client/server connection waiting to close down. The connection closes down after a small timeout. (Again, the exact output may vary among different versions of Linux.)
+
+#### Try It Out
+* client3.c
+* server3.c
 ```
 $ ./server2 & ./client2
 $ netstat –A inet
@@ -191,22 +195,87 @@ There are many options that you can use to control the behavior of socket connec
 int setsockopt(int socket, int level, int option_name,
 const void *option_value, size_t option_len);
 ```
-
-
+You can set options at various levels in the protocol hierarchy. To set options at the socket level, you must set level to SOL_SOCKET . To set options at the underlying protocol level (TCP, UDP, and so on), set level to the number of the protocol (from either the header file netinet/in.h or as obtained by the
+function getprotobyname ).
+The option_name parameter selects an option to set; the option_value parameter is an arbitrary value of length option_len bytes passed unchanged to the underlying protocol handler.
+setsockopt returns 0 if successful, -1 otherwise. The manual pages describe further options and errors.
 ## Multiple Clients
+
+Once established, socket connections behave like low-level open file
+descriptors and in many ways like bi-directional pipes.
+You might need to consider the case of multiple, simultaneous clients connecting to a server. You’ve seen that when a server program accepts a new connection from a client, a new socket is created and the original listen socket remains available for further connections. If the server doesn’t immediately accept further connections, they will be held pending in a queue.
+The fact that the original socket is still available and that sockets behave as file descriptors gives you a method of serving multiple clients at the same time. If the server calls fork to create a second copy of itself, the open socket will be inherited by the new child process. It can then communicate with the connecting client while the main server continues to accept further client connections. This is, in fact, a fairly easy change to make to your server program, which is shown in the following Try It Out section.
 
 #### Try It Out
 * server4.c
-
+```
+$ ./server4 &
+$ ./client3 & ./client3 & ./client3 & ps x
+```
 ### select
+The select system call allows a program to wait for input to arrive (or output to complete) on a number of low-level file descriptors at once. This means that the terminal emulator program can block until there is something to do. Similarly, a server can deal with multiple clients by waiting for a request on many open sockets at the same time.
+The select function operates on data structures, fd_set , that are sets of open file descriptors. A number of macros are defined for manipulating these sets:
+```
+#include <sys/types.h>
+#include <sys/time.h>
+void FD_ZERO(fd_set *fdset);
+void FD_CLR(int fd, fd_set *fdset);
+void FD_SET(int fd, fd_set *fdset);
+int FD_ISSET(int fd, fd_set *fdset);
+```
+The select function can also use a timeout value to prevent indefinite blocking. The timeout value is given using a struct timeval . This structure, defined in sys/time.h , has the following members:
+```
+struct timeval {
+    time_t tv_sec;
+    long tv_usec;
+}
+```
+The time_t type is defined in sys/types.h as an integral type.
+The select system call has the following prototype:
+```
+#include <sys/types.h>
+#include <sys/time.h>
+int select(int nfds, fd_set *readfds, fd_set *writefds,
+fd_set *errorfds, struct timeval *timeout);
+```
+A call to select is used to test whether any one of a set of file descriptors is ready for reading or writing or has an error condition pending and will optionally block until one is ready.
 
 #### Try It Out
-* 
-
+* select.c
+```
+$ ./select
+```
 ### Multiple Clients
-#### Try It Out
-* 
 
+Your simple server program can benefit by using select to handle multiple clients simultaneously, without resorting to child processes. For real applications using this technique, you must take care that you do not make other clients wait too long while you deal with the first to connect.
+The server can use select on both the listen socket and the clients’ connection sockets at the same time.
+Once activity has been indicated, you can use FD_ISSET to cycle through all the possible file descriptors to discover which one the activity is on.
+If the listen socket is ready for input, this will mean that a client is attempting to connect and you can call accept without risk of blocking. If a client descriptor is indicated ready, this means that there’s a client request pending that you can read and deal with. A read of zero bytes will indicate that a client process has ended and you can close the socket and remove it from your descriptor set.
+
+#### Try It Out
+* server5.c
+```
+$ ./server5 &
+$ ./client3 & ./client3 & ./client3 & ps x
+```
 
 ## Datagrams
 
+In this chapter, we have concentrated on programming applications that maintain connections to their clients, using connection-oriented TCP socket connections. There are cases where the overhead of establishing and maintaining a socket connection is unnecessary.
+The daytime service used in getdate.c earlier provides a good example. You create a socket, make a connection, read a single response, and close the connection. That’s a lot of operations just to get the date.
+The daytime service is also available by UDP using datagrams. To use it, you send a single datagram to the service and get a single datagram containing the date and time in response. It’s simple.
+Services provided by UDP are typically used where a client needs to make a short query of a server and expects a single short response. If the cost in terms of processing time is low enough, the server is able to provide this service by dealing with requests from clients one at a time, allowing the operating system to hold incoming requests in a queue. This simplifies the coding of the server. Because UDP is not a guaranteed service, however, you may find that your datagram or your response goes missing. So if the data is important to you, you would need to code your UDP clients carefully to check for errors and retry if necessary. In practice, on a local area network, UDP datagrams are very reliable.
+To access a service provided by UDP, you need to use the socket and close system calls as before, but rather than using read and write on the socket, you use two datagram-specific system calls, sendto and recvfrom .
+#### Try It Out
+* getdate2.c
+
+The sendto system call sends a datagram from a buffer on a socket using a socket address and address length. Its prototype is essentially
+```
+int sendto(int sockfd, void *buffer, size_t len, int flags, struct sockaddr *to, socklen_t tolen);
+```
+In normal use, the flags parameter can be kept zero.
+The recvfrom system call waits on a socket for a datagram from a specified address and receives it into a buffer. Its prototype is essentially
+```
+int recvfrom(int sockfd, void *buffer, size_t len, int flags,
+struct sockaddr *from, socklen_t *fromlen);
+```
