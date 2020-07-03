@@ -11,3 +11,41 @@ A linked list is a data structure that allows the storage and manipulation of a 
 
 ### Singly and Doubly Linked Lists
 
+```
+/* an element in a linked list */
+struct list_element {
+    void *data; /* the payload */
+    struct list_element *next; /* pointer to the next element */
+};
+```
+In some linked lists, each element also contains a pointer to the previous element.These lists are called doubly linked lists because they are linked both forward and backward.
+```
+/* an element in a linked list */
+struct list_element {
+    void *data; /* the payload */
+    struct list_element *next; /* pointer to the next element */
+    struct list_element *prev; /* pointer to the previous element */
+    };
+
+```
+
+### Circular Linked Lists
+Circular linked lists can come in both doubly and singly linked versions. In a circular doubly linked list,the first node’s “previous” pointer points at the last node.
+Although the Linux kernel’s linked list implementation is unique, it is fundamentally a circular doubly linked list. Using this type of linked list provides the greatest flexibility.
+### Moving Through a Linked List
+
+
+
+
+## Queues
+
+## Maps
+
+## Binary Trees
+
+## What Data Structure to Use, When
+
+## Algorithmic Complexity
+
+
+
