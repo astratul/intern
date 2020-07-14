@@ -94,19 +94,66 @@ if (timeout > jiffies) {
 /* we timed out, error ... */
 }
 ```
-
-
 ### User-Space and HZ
-
+The function jiffies_to_clock_t() , defined in kernel/time.c , is then used to scale a tick count in terms of HZ to a tick count in terms of USER_HZ .The expression used depends on whether USER_HZ and HZ are integer multiples of themselves and whether USER_HZ is less than or equal to HZ . If both those conditions are true, and for most systems they usually are, the expression is rather simple:
+```
+return x / (HZ / USER_HZ);
+```
+the function jiffies_64_to_clock_t() is provided to convert a 64-bit jiffies value from HZ to USER_HZ units.
+These functions are used anywhere a value in ticks-per-seconds needs to be exported to user-space. Following is an example:
+```
+unsigned long start;
+unsigned long total_time;
+start = jiffies;
+/* do some work ... */
+total_time = jiffies - start;
+printk(“That took %lu ticks\n”, jiffies_to_clock_t(total_time));
+```
+User-space expects the previous value as if HZ=USER_HZ . If they are not equivalent, the macro scales as needed and everyone is happy. Of course, this example is silly: It would make more sense to print the message in seconds, not ticks. For example:
+```
+printk(“That took %lu seconds\n”, total_time / HZ);
+```
 ## Hardware Clocks and Timers
-
+Architectures provide two hardware devices to help with time keeping: the system timer, which we have been discussing, and the real-time clock.
 ### Real-Time Clock
 
+The real-time clock (RTC) provides a nonvolatile device for storing the system time. The RTC continues to keep track of time even when the system is off by way of a small battery typically included on the system board. On the PC architecture, the RTC and the CMOS are integrated, and a single battery keeps the RTC running and the BIOS settings preserved.
+On boot, the kernel reads the RTC and uses it to initialize the wall time, which is stored in the xtime variable.The kernel does not typically read the value again; however, some supported architectures, such as x86, periodically save the current wall time back to the RTC. Nonetheless, the real time clock’s primary importance is only during boot, when the xtime variable is initialized.
 ### System Timer
+The system timer serves a much more important (and frequent) role in the kernel’s timekeeping.The idea behind the system timer, regardless of architecture, is the same—to provide a mechanism for driving an interrupt at a periodic rate. Some architectures implement this via an electronic clock that oscillates at a programmable frequency. Other systems provide a decrementer:A counter is set to some initial value and decrements at a fixed rate until the counter reaches zero.When the counter reaches zero, an interrupt is triggered. In any case, the effect is the same.
+On x86, the primary system timer is the programmable interrupt timer (PIT).The PIT exists on all PC machines and has been driving interrupts since the days of DOS.The kernel programs the PIT on boot to drive the system timer interrupt (interrupt zero) at HZ frequency. It is a simple device with limited functionality, but it gets the job done.
+Other x86 time sources include the local APIC timer and the processor’s time stamp counter (TSC).
 
 ## The Timer Interrupt Handler
+The timer interrupt is broken into two pieces: an architecture-dependent and an architecture-independent routine.
+The architecture-dependent routine is registered as the interrupt handler for the system timer and, thus, runs when the timer interrupt hits. Its exact job depends on the given architecture, of course, but most handlers perform at least the following work:
+* Obtain the xtime_lock lock, which protects access to jiffies_64 and the wall time value, xtime .
+* Acknowledge or reset the system timer as required.
+* Periodically save the updated wall time to the real time clock.
+* Call the architecture-independent timer routine, tick_periodic() .
+
+The architecture-independent routine, tick_periodic() , performs much more work:
+* Increment the jiffies_64 count by one. (This is safe, even on 32-bit architectures, because the xtime_lock lock was previously obtained.)
+* Update resource usages, such as consumed system and user time, for the currently running process.
+* Run any dynamic timers that have expired (discussed in the following section).
+* Execute scheduler_tick().
+* Update the wall time, which is stored in xtime .
+* Calculate the infamous load average.
 
 ## The Time of Day
+
+The current time of day (the wall time) is defined in kernel/time/timekeeping.c :
+```
+struct timespec xtime;
+```
+The timespec data structure is defined in <linux/time.h> as:
+```
+struct timespec {
+__kernel_time_t tv_sec; /* seconds */
+long tv_nsec; /* nanoseconds */
+}; 
+```
+
 
 ## Timers
 
