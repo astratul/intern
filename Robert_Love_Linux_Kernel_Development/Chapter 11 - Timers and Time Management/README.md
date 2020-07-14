@@ -153,20 +153,124 @@ __kernel_time_t tv_sec; /* seconds */
 long tv_nsec; /* nanoseconds */
 }; 
 ```
-
+The kernel also implements the time() 5 system call, but gettimeofday() largely supersedes it.The C library also provides other wall time–related library calls, such as ftime() and ctime() . The settimeofday() system call sets the wall time to the specified value. It requires the CAP_SYS_TIME capability. Other than updating xtime , the kernel does not make nearly as frequent use of the current wall time as user-space does.
 
 ## Timers
 
+Timers—sometimes called dynamic timers or kernel timers—are essential for managing the flow of time in kernel code. Kernel code often needs to delay execution of some function until a later time.
+The purpose of bottom halves is not so much to delay work, but simply to not do the work now.What we need is a tool for delaying work a specified amount of time—certainly no less, and with hope, not much longer.The solution is kernel timers. A timer is easy to use.You perform some initial setup, specify an expiration time, specify a function to execute upon said expiration, and activate the timer.The given function runs after the timer expires.Timers are not cyclic.The timer is destroyed after it expires. This is one reason for the dynamic nomenclature:Timers are constantly created and destroyed, and there is no limit on the number of timers.Timers are popular throughout the entire kernel.
+
 ### Using Timers
+Timers are represented by struct timer_list , which is defined in <linux/timer.h> :
+```
+struct timer_list {
+struct list_head entry; // entry in linked list of timers 
+unsigned long expires; // expiration value, in jiffies 
+void (*function)(unsigned long); // the timer handler function 
+unsigned long data; // lone argument to the handler 
+struct tvec_t_base_s *base; // internal timer field, do not touch 
+};
+```
+The first step in creating a timer is defining it:
+```
+struct timer_list my_timer;
+```
+Next, the timer’s internal values must be initialized.This is done via a helper function and must be done prior to calling any timer management functions on the timer:
+```
+init_timer(&my_timer);
+```
+Now you fill out the remaining values as required:
+```
+my_timer.expires = jiffies + delay; /* timer expires in delay ticks */
+my_timer.data = 0; /* zero is passed to the timer handler */
+my_timer.function = my_function; /* function to run when timer expires */
+```
+The my_timer.expires value specifies the timeout value in absolute ticks.When the current jiffies count is equal to or greater than my_timer.expires , the handler function my_timer.function is run with the lone argument of my_timer.data .As you can see from the timer_list definition, the function must match this prototype:
+```
+void my_timer_function(unsigned long data); 
+```
+The data parameter enables you to register multiple timers with the same handler, and differentiate between them via the argument. If you do not need the argument, you can simply pass zero (or any other value). Finally, you activate the timer:
+```
+add_timer(&my_timer);
+```
+If you need to deactivate a timer prior to its expiration, use the del_timer() function:
+```
+del_timer(&my_timer);
+```
 
 ### Timer Race Conditions
 
+Because timers run asynchronously with respect to the currently executing code, several potential race conditions exist. First, never do the following as a substitute for a mere mod_timer() , because this is unsafe on multiprocessing machines:
+```
+del_timer(my_timer)
+my_timer->expires = jiffies + new_delay;
+add_timer(my_timer);
+```
+Second, in almost all cases, you should use del_timer_sync() over del_timer() . Otherwise, you cannot assume the timer is not currently running, and that is why you made the call in the first place! Imagine if, after deleting the timer, the code went on to free or otherwise manipulate resources used by the timer handler.Therefore, the synchronous version is preferred. Finally, you must make sure to protect any shared data used in the timer handler function.The kernel runs the function asynchronously with respect to other code.
+
 ### Timer Implementation
+
+The kernel executes timers in bottom-half context, as softirqs, after the timer interrupt completes.The timer interrupt handler runs update_process_times() , which calls run_local_timers() : 
+```
+void run_local_timers(void)
+{
+hrtimer_run_queues();
+raise_softirq(TIMER_SOFTIRQ); /* raise the timer softirq */
+softlockup_tick();
+}
+```
+The TIMER_SOFTIRQ softirq is handled by run_timer_softirq() .This function runs all the expired timers (if any) on the current processor. Timers are stored in a linked list.
 
 ## Delaying Execution
 
+Often, kernel code (especially drivers) needs a way to delay execution for some time without using timers or a bottom-half mechanism.This is usually to enable hardware time to complete a given task.The time is typically quite short. 
+
 ### Busy Looping
+The simplest solution to implement (although rarely the optimal solution) is busy waiting or busy looping.This technique works only when the time you want to delay is some integer multiple of the tick rate or precision is not important. The idea is simple: Spin in a loop until the desired number of clock ticks pass.
+```
+unsigned long timeout = jiffies + 10; /* ten ticks */
+while (time_before(jiffies, timeout))
+;
+```
+The loop continues until jiffies is larger than delay , which occurs only after 10 clock ticks have passed.
+This approach is not nice to the rest of the system.While your code waits, the processor is tied up spinning in a silly loop—no useful work is accomplished! You rarely want to take this brain-dead approach, and it is shown here because it is a clear and simple method for delaying execution.You might also encounter it in someone else’s not-so-pretty code.
+The kernel requires, however, that jiffies be reread on each iteration, as the value is incremented elsewhere: in the timer interrupt. Indeed, this is why the variable is marked volatile in <linux/jiffies.h> .The volatile keyword instructs the compiler to reload the variable on each access from main memory and never alias the variable’s value in a register, guaranteeing that the previous loop completes as expected.
 
 ### Small Delays
+Sometimes, kernel code (again, usually drivers) requires short (smaller than a clock tick) and rather precise delays.This is often to synchronize with hardware, which again usually lists some minimum time for an activity to complete—often less than a millisecond. It would be impossible to use jiffies -based delays, as in the previous examples, for such a short wait.
+Thankfully, the kernel provides three functions for microsecond, nanosecond, and millisecond delays, defined in <linux/delay.h> and <asm/delay.h >, which do not use jiffies :
+```
+void udelay(unsigned long usecs)
+void ndelay(unsigned long nsecs)
+void mdelay(unsigned long msecs)
+```
+The former function delays execution by busy looping for the specified number of microseconds.The latter function delays execution for the specified number of milliseconds.
+The udelay() function is implemented as a loop that knows how many iterations can be executed in a given period of time.The mdelay() function is then implemented in terms of udelay() . Because the kernel knows how many loops the processor can complete in a second (see the sidebar on BogoMIPS), the udelay() function simply scales that value to the correct number of loop iterations for the given delay.
+
+The udelay() function should be called only for small delays because larger delays on fast machines might result in overflow.As a rule, do not use udelay() for delays more than one millisecond in duration. For longer durations, mdelay() works fine. Like the other busy waiting solutions for delaying execution, neither of these functions (especially mdelay() , because it is used for such long delays) should be used unless absolutely needed.
 
 ### schedule_timeout()
+A more optimal method of delaying execution is to use schedule_timeout() .This call puts your task to sleep until at least the specified time has elapsed.There is no guarantee that the sleep duration will be exactly the specified time—only that the duration is at least as long as specified.When the specified time has elapsed, the kernel wakes the task up and places it back on the runqueue. Usage is easy:
+```
+/* set task’s state to interruptible sleep */
+set_current_state(TASK_INTERRUPTIBLE);
+/* take a nap and wake up in “s” seconds */
+schedule_timeout(s * HZ);
+```
+The lone parameter is the desired relative timeout, in jiffies.This example puts the task in interruptible sleep for s seconds. Because the task is marked TASK_INTERRUPTIBLE , it wakes up prematurely if it receives a signal. If the code does not want to process signals, you can use TASK_UNINTERRUPTIBLE instead.The task must be in one of these two states before schedule_timeout() is called or else the task will not go to sleep. Note that because schedule_timeout() invokes the scheduler, code that calls it must be capable of sleeping.
+
+#### schedule_timeout() Implementation
+
+The function creates a timer with the original name timer and sets it to expire in timeout clock ticks in the future. It sets the timer to execute the process_timeout() function when the timer expires. It then enables the timer and calls schedule() . Because the task is supposedly marked TASK_INTERRUPTIBLE or TASK_UNINTERRUPTIBLE , the scheduler does not run the task, but instead picks a new one. When the timer expires, it runs process_timeout() :
+```
+void process_timeout(unsigned long data)
+{
+wake_up_process((task_t *) data);
+}
+```
+This function puts the task in the TASK_RUNNING state and places it back on the runqueue.
+When the task reschedules, it returns to where it left off in schedule_timeout() (right after the call to schedule() ). In case the task was awakened prematurely (if a signal was received), the timer is destroyed.The function then returns the time slept.
+The code in the switch() statement is for special cases and is not part of the general usage of the function.The MAX_SCHEDULE_TIMEOUT check enables a task to sleep indefinitely. In that case, no timer is set (because there is no bound on the sleep duration), and the scheduler is immediately invoked. If you do this, you must have another method of waking your task up!
+
+#### Sleeping on a Wait Queue, with a Timeout
+Sometimes it is desirable to wait for a specific event or wait for a specified time to elapse—whichever comes first. In those cases, code might simply call schedule_timeout() instead of schedule() after placing itself on a wait queue.The task wakes up when the desired event occurs or the specified time elapses.The code needs to check why it woke up—it might be because of the event occurring, the time elapsing, or a received signal—and continue as appropriate.
